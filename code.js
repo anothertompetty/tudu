@@ -1,4 +1,4 @@
-figma.showUI(__html__, { width: 224, height: 120 });
+figma.showUI(__html__, { width: 224, height: 120, themeColors: true });
 
 const userId =
   figma.currentUser && figma.currentUser.id ? figma.currentUser.id : "anon";

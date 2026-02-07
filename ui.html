@@ -18,8 +18,8 @@
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
-        color: #161616;
-        background: #fff;
+        color: var(--figma-color-text);
+        background: var(--figma-color-bg);
         overflow: hidden;
         cursor: default;
       }
@@ -32,8 +32,8 @@
       /* ── Header Bar ── */
       .header-bar {
         padding: 8px;
-        border-bottom: 1px solid #e6e6e6;
-        background: #fff;
+        border-bottom: 1px solid var(--figma-color-border);
+        background: var(--figma-color-bg);
         flex-shrink: 0;
       }
 
@@ -56,18 +56,18 @@
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
-        color: #7f7f7f;
+        color: var(--figma-color-text-secondary);
         cursor: default;
         outline: none;
       }
 
       .tab:hover {
-        background: #f5f5f5;
+        background: var(--figma-color-bg-hover);
       }
 
       .tab.selected {
-        background: #f5f5f5;
-        color: #161616;
+        background: var(--figma-color-bg-secondary);
+        color: var(--figma-color-text);
       }
 
       /* ── Item List ── */
@@ -76,7 +76,7 @@
         flex-direction: column;
         gap: 4px;
         padding: 8px;
-        background: #fff;
+        background: var(--figma-color-bg);
         overflow-y: hidden;
       }
 
@@ -93,7 +93,7 @@
       }
 
       .todo-item:hover {
-        background: #f5f5f5;
+        background: var(--figma-color-bg-hover);
       }
 
       .item-inner {
@@ -126,7 +126,7 @@
         font-size: 11px;
         font-weight: 400;
         line-height: 16px;
-        color: #161616;
+        color: var(--figma-color-text);
         word-break: break-word;
         white-space: pre-wrap;
         min-width: 0;
@@ -134,7 +134,7 @@
       }
 
       .todo-item.done .item-text {
-        color: #b2b2b2;
+        color: var(--figma-color-text-tertiary);
       }
 
       /* ── Remove Button ── */
@@ -155,7 +155,7 @@
       }
 
       .btn-remove:hover {
-        background: #e9e9e9;
+        background: var(--figma-color-bg-tertiary);
       }
 
       .todo-item:hover .btn-remove {
@@ -176,7 +176,7 @@
       }
 
       .action-row:hover {
-        background: #f5f5f5;
+        background: var(--figma-color-bg-hover);
       }
 
       .action-row.editing:hover {
@@ -196,7 +196,7 @@
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
-        color: #161616;
+        color: var(--figma-color-text);
       }
 
       .inline-input {
@@ -207,7 +207,7 @@
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
-        color: #161616;
+        color: var(--figma-color-text);
         outline: none;
         padding: 0;
         min-width: 0;
@@ -230,7 +230,7 @@
         right: 0;
         top: -1px;
         height: 2px;
-        background: #0b99ff;
+        background: var(--figma-color-bg-brand);
       }
     </style>
   </head>
@@ -246,15 +246,15 @@
     </div>
 
     <script>
-      /* ── SVG Icons ── */
+      /* ── SVG Icons (use Figma theme vars so they follow light/dark) ── */
       const SVG_RADIO_DEFAULT =
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#B3B3B3" stroke-width="1"/></svg>';
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--figma-color-icon-tertiary)" stroke-width="1"/></svg>';
       const SVG_RADIO_CHECKED =
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#18A0FB"/><path d="M4.5 7.2L6.2 8.9L9.7 5.1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="var(--figma-color-bg-brand)"/><path d="M4.5 7.2L6.2 8.9L9.7 5.1" stroke="var(--figma-color-icon-onbrand)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       const SVG_PLUS =
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3V11M3 7H11" stroke="#161616" stroke-width="1" stroke-linecap="round"/></svg>';
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3V11M3 7H11" stroke="var(--figma-color-icon)" stroke-width="1" stroke-linecap="round"/></svg>';
       const SVG_MINUS =
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7H11" stroke="#161616" stroke-width="1" stroke-linecap="round"/></svg>';
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7H11" stroke="var(--figma-color-icon)" stroke-width="1" stroke-linecap="round"/></svg>';
 
       /* ── Constants ── */
       const BLUR_DELAY_MS = 150;
