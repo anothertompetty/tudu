@@ -310,6 +310,14 @@
         render();
       }
 
+      function parseBulletLines(text) {
+        /* Strip common bullet prefixes: •, -, *, >, numbered (1. 2.) */
+        return text
+          .split(/\n/)
+          .map((l) => l.replace(/^\s*(?:[•\-\*\>]|\d+[.\)])\s*/, "").trim())
+          .filter(Boolean);
+      }
+
       function addItem(text) {
         const t = text.trim();
         if (!t) return;
@@ -317,6 +325,22 @@
           id: Date.now() + "-" + Math.random().toString(16).slice(2),
           text: t,
           done: false,
+        });
+        state.skipNextBlur = true;
+        state.editing = true;
+        state.focusAfterRender = true;
+        postSave();
+        render();
+      }
+
+      function addItems(lines) {
+        if (!lines.length) return;
+        lines.forEach((text) => {
+          state.items.push({
+            id: Date.now() + "-" + Math.random().toString(16).slice(2),
+            text: text,
+            done: false,
+          });
         });
         state.skipNextBlur = true;
         state.editing = true;
@@ -477,6 +501,15 @@
               v ? addItem(v) : stopEditing();
             }
             if (e.key === "Escape") stopEditing();
+          });
+          inp.addEventListener("paste", (e) => {
+            const pasted = (e.clipboardData || window.clipboardData).getData("text");
+            const lines = parseBulletLines(pasted);
+            if (lines.length > 1) {
+              e.preventDefault();
+              addItems(lines);
+            }
+            /* single-line paste falls through to default behavior */
           });
           inp.addEventListener("blur", () => {
             setTimeout(() => {
