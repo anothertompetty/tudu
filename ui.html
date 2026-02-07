@@ -1,0 +1,563 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        color: #161616;
+        background: #fff;
+        overflow: hidden;
+        cursor: default;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ── Header Bar ── */
+      .header-bar {
+        padding: 8px;
+        border-bottom: 1px solid #e6e6e6;
+        background: #fff;
+        flex-shrink: 0;
+      }
+
+      .tab-group {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 5px;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        color: #7f7f7f;
+        cursor: default;
+        outline: none;
+      }
+
+      .tab:hover {
+        background: #f5f5f5;
+      }
+
+      .tab.selected {
+        background: #f5f5f5;
+        color: #161616;
+      }
+
+      /* ── Item List ── */
+      .item-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px;
+        background: #fff;
+        overflow-y: hidden;
+      }
+
+      /* ── To-Do Item Row ── */
+      .todo-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding-left: 8px;
+        border-radius: 5px;
+        flex-shrink: 0;
+        position: relative;
+        cursor: default;
+      }
+
+      .todo-item:hover {
+        background: #f5f5f5;
+      }
+
+      .item-inner {
+        display: flex;
+        flex: 1 0 0;
+        gap: 8px;
+        align-items: flex-start;
+        padding: 4px 0;
+        min-width: 0;
+        min-height: 1px;
+      }
+
+      .radio-container {
+        display: flex;
+        align-items: center;
+        padding-top: 1px;
+        flex-shrink: 0;
+      }
+
+      .radio-btn {
+        width: 14px;
+        height: 14px;
+        cursor: default;
+        display: block;
+        flex-shrink: 0;
+      }
+
+      .item-text {
+        flex: 1 0 0;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 16px;
+        color: #161616;
+        word-break: break-word;
+        white-space: pre-wrap;
+        min-width: 0;
+        min-height: 1px;
+      }
+
+      .todo-item.done .item-text {
+        color: #b2b2b2;
+      }
+
+      /* ── Remove Button ── */
+      .btn-remove {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
+        border: none;
+        background: transparent;
+        cursor: default;
+        flex-shrink: 0;
+        padding: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .btn-remove:hover {
+        background: #e9e9e9;
+      }
+
+      .todo-item:hover .btn-remove {
+        visibility: visible;
+        pointer-events: auto;
+      }
+
+      /* ── Action Row (Add item / Clear all) ── */
+      .action-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 5px;
+        cursor: default;
+        flex-shrink: 0;
+      }
+
+      .action-row:hover {
+        background: #f5f5f5;
+      }
+
+      .action-row.editing:hover {
+        background: transparent;
+      }
+
+      .action-icon {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .action-label {
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        color: #161616;
+      }
+
+      .inline-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        color: #161616;
+        outline: none;
+        padding: 0;
+        min-width: 0;
+        cursor: default;
+      }
+
+      /* ── Drag States ── */
+      .todo-item.dragging {
+        opacity: 0.4;
+      }
+
+      .todo-item.drag-over {
+        background: transparent;
+      }
+
+      .todo-item.drag-over::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -1px;
+        height: 2px;
+        background: #0b99ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <div class="header-bar">
+        <div class="tab-group">
+          <button class="tab selected" data-view="active">To-do</button>
+          <button class="tab" data-view="done">Done</button>
+        </div>
+      </div>
+      <div class="item-list" id="item-list"></div>
+    </div>
+
+    <script>
+      /* ── SVG Icons ── */
+      const SVG_RADIO_DEFAULT =
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#B3B3B3" stroke-width="1"/></svg>';
+      const SVG_RADIO_CHECKED =
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#18A0FB"/><path d="M4.5 7.2L6.2 8.9L9.7 5.1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      const SVG_PLUS =
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3V11M3 7H11" stroke="#161616" stroke-width="1" stroke-linecap="round"/></svg>';
+      const SVG_MINUS =
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7H11" stroke="#161616" stroke-width="1" stroke-linecap="round"/></svg>';
+
+      /* ── Constants ── */
+      const BLUR_DELAY_MS = 150;
+      const DONE_FEEDBACK_MS = 300;
+
+      /* ── State ── */
+      const state = {
+        items: [],
+        view: "active",
+        editing: false,
+        skipNextBlur: false,
+        focusAfterRender: false,
+        dragId: null,
+      };
+
+      /* ── Cached DOM ── */
+      const headerEl = document.querySelector(".header-bar");
+      const listEl = document.getElementById("item-list");
+
+      /* ── Helpers ── */
+      function postSave() {
+        parent.postMessage(
+          { pluginMessage: { type: "save", items: state.items } },
+          "*"
+        );
+      }
+
+      function postResize() {
+        requestAnimationFrame(() => {
+          const h = headerEl.offsetHeight + listEl.scrollHeight;
+          parent.postMessage(
+            { pluginMessage: { type: "resize", height: h } },
+            "*"
+          );
+        });
+      }
+
+      function filteredItems() {
+        return state.items.filter((i) =>
+          state.view === "done" ? i.done : !i.done
+        );
+      }
+
+      /* ── Actions ── */
+      function setView(v) {
+        state.view = v;
+        state.editing = false;
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) =>
+            t.classList.toggle("selected", t.dataset.view === v)
+          );
+        render();
+      }
+
+      function addItem(text) {
+        const t = text.trim();
+        if (!t) return;
+        state.items.push({
+          id: Date.now() + "-" + Math.random().toString(16).slice(2),
+          text: t,
+          done: false,
+        });
+        state.skipNextBlur = true;
+        state.editing = true;
+        state.focusAfterRender = true;
+        postSave();
+        render();
+      }
+
+      function toggleDone(id) {
+        const item = state.items.find((i) => i.id === id);
+        if (!item) return;
+
+        if (!item.done && state.view === "active") {
+          /* Brief visual feedback before moving to Done */
+          const row = document.querySelector('[data-id="' + id + '"]');
+          if (row) {
+            row.classList.add("done");
+            const rb = row.querySelector(".radio-btn");
+            if (rb) rb.innerHTML = SVG_RADIO_CHECKED;
+          }
+          setTimeout(() => {
+            item.done = true;
+            postSave();
+            render();
+          }, DONE_FEEDBACK_MS);
+        } else {
+          item.done = !item.done;
+          postSave();
+          render();
+        }
+      }
+
+      function deleteItem(id) {
+        state.items = state.items.filter((i) => i.id !== id);
+        postSave();
+        render();
+      }
+
+      function clearDone() {
+        state.items = state.items.filter((i) => !i.done);
+        postSave();
+        render();
+      }
+
+      function moveItem(fromId, toId) {
+        const fi = state.items.findIndex((i) => i.id === fromId);
+        const ti = state.items.findIndex((i) => i.id === toId);
+        if (fi < 0 || ti < 0 || fi === ti) return;
+        const [m] = state.items.splice(fi, 1);
+        state.items.splice(ti, 0, m);
+        postSave();
+        render();
+      }
+
+      function startEditing() {
+        state.editing = true;
+        state.focusAfterRender = true;
+        render();
+      }
+
+      function stopEditing() {
+        state.editing = false;
+        render();
+      }
+
+      /* ── Render Helpers ── */
+      function renderItem(item, isActive) {
+        const row = document.createElement("div");
+        row.className = "todo-item" + (item.done ? " done" : "");
+        row.draggable = isActive;
+        row.dataset.id = item.id;
+
+        const inner = document.createElement("div");
+        inner.className = "item-inner";
+
+        const rc = document.createElement("div");
+        rc.className = "radio-container";
+
+        const rb = document.createElement("div");
+        rb.className = "radio-btn";
+        rb.innerHTML = item.done ? SVG_RADIO_CHECKED : SVG_RADIO_DEFAULT;
+        rc.appendChild(rb);
+
+        const txt = document.createElement("span");
+        txt.className = "item-text";
+        txt.textContent = item.text;
+
+        inner.appendChild(rc);
+        inner.appendChild(txt);
+        row.appendChild(inner);
+
+        const rmBtn = document.createElement("button");
+        rmBtn.className = "btn-remove";
+        rmBtn.innerHTML = SVG_MINUS;
+        rmBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteItem(item.id);
+        });
+        row.appendChild(rmBtn);
+
+        row.addEventListener("click", (e) => {
+          if (rmBtn.contains(e.target)) return;
+          toggleDone(item.id);
+        });
+
+        if (isActive) {
+          row.addEventListener("dragstart", (e) => {
+            state.dragId = item.id;
+            row.classList.add("dragging");
+            if (e.dataTransfer) {
+              e.dataTransfer.effectAllowed = "move";
+            }
+          });
+          row.addEventListener("dragend", () => {
+            row.classList.remove("dragging");
+            state.dragId = null;
+          });
+          row.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            if (e.dataTransfer) {
+              e.dataTransfer.dropEffect = "move";
+            }
+            row.classList.add("drag-over");
+          });
+          row.addEventListener("dragleave", () =>
+            row.classList.remove("drag-over")
+          );
+          row.addEventListener("drop", (e) => {
+            e.preventDefault();
+            row.classList.remove("drag-over");
+            if (state.dragId && state.dragId !== item.id)
+              moveItem(state.dragId, item.id);
+            state.dragId = null;
+          });
+        }
+
+        return row;
+      }
+
+      function renderActiveAction() {
+        const row = document.createElement("div");
+        row.className = "action-row" + (state.editing ? " editing" : "");
+
+        const iconDiv = document.createElement("div");
+        iconDiv.className = "action-icon";
+        iconDiv.innerHTML = SVG_PLUS;
+        row.appendChild(iconDiv);
+
+        if (state.editing) {
+          const inp = document.createElement("input");
+          inp.className = "inline-input";
+          inp.id = "add-input";
+          inp.type = "text";
+          inp.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const v = inp.value.trim();
+              v ? addItem(v) : stopEditing();
+            }
+            if (e.key === "Escape") stopEditing();
+          });
+          inp.addEventListener("blur", () => {
+            setTimeout(() => {
+              if (!state.editing) return;
+              if (state.skipNextBlur) {
+                state.skipNextBlur = false;
+                return;
+              }
+              const v = inp.value.trim();
+              v ? addItem(v) : stopEditing();
+            }, BLUR_DELAY_MS);
+          });
+          row.appendChild(inp);
+        } else {
+          const lbl = document.createElement("span");
+          lbl.className = "action-label";
+          lbl.textContent = "Add item";
+          row.appendChild(lbl);
+          row.addEventListener("click", startEditing);
+        }
+
+        return row;
+      }
+
+      function renderDoneAction() {
+        const row = document.createElement("div");
+        row.className = "action-row";
+
+        const iconDiv = document.createElement("div");
+        iconDiv.className = "action-icon";
+        iconDiv.innerHTML = SVG_MINUS;
+
+        const lbl = document.createElement("span");
+        lbl.className = "action-label";
+        lbl.textContent = "Clear all";
+
+        row.appendChild(iconDiv);
+        row.appendChild(lbl);
+        row.addEventListener("click", clearDone);
+        return row;
+      }
+
+      /* ── Render ── */
+      function render() {
+        const isActive = state.view === "active";
+        const items = filteredItems();
+        listEl.innerHTML = "";
+
+        items.forEach((item) => {
+          listEl.appendChild(renderItem(item, isActive));
+        });
+
+        listEl.appendChild(
+          isActive ? renderActiveAction() : renderDoneAction()
+        );
+
+        postResize();
+
+        if (state.focusAfterRender) {
+          state.focusAfterRender = false;
+          const inp = document.getElementById("add-input");
+          if (inp) inp.focus();
+        }
+      }
+
+      /* ── Tab Listeners ── */
+      document.querySelectorAll(".tab").forEach((t) => {
+        t.addEventListener("click", () => setView(t.dataset.view));
+      });
+
+      /* ── Plugin Communication ── */
+      window.onmessage = (event) => {
+        const msg = event.data.pluginMessage;
+        if (!msg) return;
+        if (msg.type === "loaded") {
+          state.items = Array.isArray(msg.items) ? msg.items : [];
+          render();
+        }
+      };
+
+      parent.postMessage({ pluginMessage: { type: "load" } }, "*");
+    </script>
+  </body>
+</html>
