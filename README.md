@@ -1,4 +1,4 @@
-A simple to-do list plugin for Figma. 
+**A simple to-do list plugin for Figma. **
 
 Designed to look and feel native to Figma's UI, it does what it says on the tin.
 
