@@ -194,7 +194,7 @@
 
       .action-label {
         font-size: 11px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 16px;
         color: var(--figma-color-text);
       }
@@ -318,13 +318,14 @@
           .filter(Boolean);
       }
 
-      function addItem(text) {
-        const t = text.trim();
-        if (!t) return;
-        state.items.push({
-          id: Date.now() + "-" + Math.random().toString(16).slice(2),
-          text: t,
-          done: false,
+      function generateId() {
+        return Date.now() + "-" + Math.random().toString(16).slice(2);
+      }
+
+      function addItems(lines) {
+        if (!lines.length) return;
+        lines.forEach((text) => {
+          state.items.push({ id: generateId(), text, done: false });
         });
         state.skipNextBlur = true;
         state.editing = true;
@@ -333,20 +334,10 @@
         render();
       }
 
-      function addItems(lines) {
-        if (!lines.length) return;
-        lines.forEach((text) => {
-          state.items.push({
-            id: Date.now() + "-" + Math.random().toString(16).slice(2),
-            text: text,
-            done: false,
-          });
-        });
-        state.skipNextBlur = true;
-        state.editing = true;
-        state.focusAfterRender = true;
-        postSave();
-        render();
+      function addItem(text) {
+        const t = text.trim();
+        if (!t) return;
+        addItems([t]);
       }
 
       function toggleDone(id) {
@@ -407,6 +398,33 @@
       }
 
       /* ── Render Helpers ── */
+      function attachDragHandlers(row, itemId) {
+        row.addEventListener("dragstart", (e) => {
+          state.dragId = itemId;
+          row.classList.add("dragging");
+          if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+        });
+        row.addEventListener("dragend", () => {
+          row.classList.remove("dragging");
+          state.dragId = null;
+        });
+        row.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+          row.classList.add("drag-over");
+        });
+        row.addEventListener("dragleave", () =>
+          row.classList.remove("drag-over")
+        );
+        row.addEventListener("drop", (e) => {
+          e.preventDefault();
+          row.classList.remove("drag-over");
+          if (state.dragId && state.dragId !== itemId)
+            moveItem(state.dragId, itemId);
+          state.dragId = null;
+        });
+      }
+
       function renderItem(item, isActive) {
         const row = document.createElement("div");
         row.className = "todo-item" + (item.done ? " done" : "");
@@ -446,36 +464,7 @@
           toggleDone(item.id);
         });
 
-        if (isActive) {
-          row.addEventListener("dragstart", (e) => {
-            state.dragId = item.id;
-            row.classList.add("dragging");
-            if (e.dataTransfer) {
-              e.dataTransfer.effectAllowed = "move";
-            }
-          });
-          row.addEventListener("dragend", () => {
-            row.classList.remove("dragging");
-            state.dragId = null;
-          });
-          row.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            if (e.dataTransfer) {
-              e.dataTransfer.dropEffect = "move";
-            }
-            row.classList.add("drag-over");
-          });
-          row.addEventListener("dragleave", () =>
-            row.classList.remove("drag-over")
-          );
-          row.addEventListener("drop", (e) => {
-            e.preventDefault();
-            row.classList.remove("drag-over");
-            if (state.dragId && state.dragId !== item.id)
-              moveItem(state.dragId, item.id);
-            state.dragId = null;
-          });
-        }
+        if (isActive) attachDragHandlers(row, item.id);
 
         return row;
       }

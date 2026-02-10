@@ -22,15 +22,10 @@ function saveItems(items) {
 figma.ui.onmessage = (msg) => {
   if (msg.type === "load") {
     figma.ui.postMessage({ type: "loaded", items: loadItems() });
-  }
-
-  if (msg.type === "save") {
+  } else if (msg.type === "save") {
     saveItems(msg.items || []);
-  }
-
-  if (msg.type === "resize") {
+  } else if (msg.type === "resize") {
     const height = Math.ceil(msg.height);
     figma.ui.resize(224, height);
   }
-
 };
